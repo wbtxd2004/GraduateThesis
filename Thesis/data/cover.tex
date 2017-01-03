@@ -140,8 +140,8 @@
                     % 机密$\bigstar$10年
                     % 秘密$\bigstar$5年
 \newcommand{\UDC}{}%UDC
-\newcommand{\oucctitle}{基于Docker的WEB平台开发以及系统优化策略研究}%论文中文题目
-\ctitle{基于Docker的WEB平台开发以及系统优化策略研究}%必须修改因为页眉中用到
+\newcommand{\oucctitle}{基于Spring MVC架构的WEB平台系统优化策略研究}%论文中文题目
+\ctitle{基于Spring MVC架构的WEB平台系统优化策略研究}%必须修改因为页眉中用到
 \cauthor{武斌}%可以选择修改因为仅在 pdf 文档信息中用到
 \cdegree{工学硕士}%可以选择修改因为仅在 pdf 文档信息中用到
 \ckeywords{\TeX, \LaTeX, CJK, 模板, 论文}%可以选择修改因为仅在 pdf 文档信息中用到
@@ -154,7 +154,7 @@
 \newcommand{\oucdatedefense}{2017年05月28日}%论文答辩时间
 %\newcommand{\oucdatedegree}{2009年6月}%学位授予时间
 \newcommand{\oucgratitude}{谨以此论文献给我的导师和亲人！}%封面感谢语
-\newcommand{\oucetitle}{Research on Web Platform Development Based on Docker and System Optimization Strategy}%论文英文题目
+\newcommand{\oucetitle}{Research on Web Platform System Optimization Strategy Based on Spring MVC Framework}%论文英文题目
 %\newcommand{\ouceauthor}{Haiyong Zheng}%作者英文姓名
 \newcommand{\oucthesis}{\textsc{OUCThesis}}
 %%%%%默认自定义命令%%%%%
@@ -251,31 +251,36 @@
 {\normalsize\songti
 
   \indent
-  论文的摘要是对论文研究内容和成果的高度概括。摘要应对论文所研究的问题及其研究目
-  的进行描述，对研究方法和过程进行简单介绍，对研究成果和所得结论进行概括。摘要应
-  具有独立性和自明性，其内容应包含与论文全文同等量的主要信息。使读者即使不阅读全
-  文，通过摘要就能了解论文的总体内容和主要成果。
+  近几年，随着中国经济的不断发展以及中国互联网整体水平的不断提高，虚拟
+  经济在中国的经济发展中扮演着越来越重要的作用，WEB应用作为虚拟经济的
+  主要呈现方式也获得了非常大的发展。越来越多面向不同消费群体的WEB应用
+  被设计和开发出来为消费者提供各种的服务。
 
-  论文摘要的书写应力求精确、简明。切忌写成对论文书写内容进行提要的形式，尤其要避
-  免“第 1 章……；第 2 章……；……”这种或类似的陈述方式。
+  随着Internet网的不断告诉发展，人们对于WEB应用的需要不再基于可用性那
+  么简单，应用的用户体验越来越被重视~\cite{李梦2016基于前端的}。然而，
+  随着用户数量的不断增加，WEB服务器的信息量和访问量成几何数级的增长，网
+  络拥塞和服务超载日益成为开发人员必须面对的严峻问题。
 
-  本文介绍清华大学论文模板 \thuthesis{} 的使用方法。本模板符合学校的本科、硕士、
-  博士论文格式要求。
+  因此在WEB应用的开发过程中，开发人员不但需要在代码的书写上要进行不断优化，
+  降低代码的错误率和提升代码的执行效率外，而且要将很大的精力放到服务器性能
+  优化方面，通过调整WEB服务器的运行参数提升服务器的响应效率、优化缓存机制
+  提升数据的存取效率，设计负载均衡方案实现应用服务器的负载均衡，开发数据库
+  的主从复制和延时复制等策略保证数据的稳定性以及编写监控脚本实现服务的实施
+  监控等措施来提升应用的体验和增强系统的安全性。
 
   本文的创新点主要有：
   \begin{itemize}
-    \item 用例子来解释模板的使用方法；
-    \item 用废话来填充无关紧要的部分；
-    \item 一边学习摸索一边编写新代码。
+    \item 通过Jenkins实现WEB应用的自动构建和部署，提升了WEB应用的稳定性，降低代码错误率；
+    \item 基于Couchbase缓存机制，加快了应用的数据读取，降低了系统的响应时间；
+    \item 通过Docker容器编排技术，方便的实现服务集群节点的扩展，增强了系统的安全性，实现了统一管理和维护；
+    \item 通过负载均衡，降低了应用服务器和数据服务器的压力，提升了用户的体验；
+    \item 充分利用API实现监控脚本，实现了应用的实时监控，很大程度上减少了发现问题和故障处理的时间；
   \end{itemize}
 
-  关键词是为了文献标引工作、用以表示全文主要内容信息的单词或术语。关键词不超过 5
-  个，每个关键词中间用分号分隔。（模板作者注：关键词分隔符不用考虑，模板会自动处
-  理。英文关键词同理。）
 }
 \vskip12bp
 {\xiaosi\heiti\noindent
-关键词：\hskip1em JAVA, FDP, Docker, WEB系统优化, 负载均衡}
+关键词：\hskip1em Spring MVC框架应用开发; WEB应用性能优化; 数据库性能优化; 服务监控及应对方案; }
 
 \newpage
 
@@ -286,25 +291,22 @@
 \end{center}
 {\normalsize\songti
 
-   An abstract of a dissertation is a summary and extraction of research work
-   and contributions. Included in an abstract should be description of research
-   topic and research objective, brief introduction to methodology and research
-   process, and summarization of conclusion and contributions of the
-   research. An abstract should be characterized by independence and clarity and
-   carry identical information with the dissertation. It should be such that the
-   general idea and major contributions of the dissertation are conveyed without
-   reading the dissertation. 
+   In recent years, with the continuous development of China's economy and the continuous improvement of the overall level of China's Internet, virtual economy plays an increasingly important role in China's economic development, WEB application as a virtual economy is also the main presentation of the very Big development. More and more for different consumer groups of WEB applications are designed and developed to provide consumers with a variety of services.
 
-   An abstract should be concise and to the point. It is a misunderstanding to
-   make an abstract an outline of the dissertation and words ``the first
-   chapter'', ``the second chapter'' and the like should be avoided in the
-   abstract.
+   With the continuous development of the Internet to tell the people, the need for WEB applications is no longer based on usability so simple, application user experience more and more attention. However, with the increase of the number of users, the amount of information and the number of visits of the WEB server grows geometrically. Network congestion and service overload are increasingly becoming the serious problem that the developers must face.
 
-   Key words are terms used in a dissertation for indexing, reflecting core
-   information of the dissertation. An abstract may contain a maximum of 5 key
-   words, with semi-colons used in between to separate one another.
+   Therefore, in the WEB application development process, developers need to not only write code on the continuous optimization to reduce the code error rate and improve the efficiency of the code, but also to a lot of energy into the server performance optimization, By adjusting the operating parameters of the WEB server to improve the response efficiency of the server and optimize the cache mechanism to improve the efficiency of data access, the design load balancing solution to achieve the application server load balancing, database replication master and slave replication and delay replication strategy to ensure data stability As well as the preparation of monitoring scripts to achieve the implementation of service monitoring and other measures to enhance the application experience and enhance the security of the system.
+
+   The innovation of this paper：
+  \begin{itemize}
+    \item Through Jenkins to realize the automatic construction and deployment of WEB applications to enhance the stability and reduce code error rate；
+    \item Through Couchbase cache mechanism to speed up the data read of application, reducing the system response time；
+    \item Through Docker container scheduling technology to facilitate the expansion of service cluster nodes to enhance the security of the system to achieve a unified management and maintenance；
+    \item Reduces stress on application servers and data servers through load balancing and improves user experience；
+    \item Make full use of API to achieve the monitoring script to achieve the application of real-time monitoring, to a large extent reduce the discovery of problems and troubleshooting time；
+  \end{itemize}
 }
 \vskip12bp
-{\xiaosi\heiti\noindent 
-\textbf{Keywords:\enskip \TeX, \LaTeX, CJK, template, thesis}}
+{\xiaosi\heiti\noindent
+\textbf{Keywords:\enskip WEB Aplication Development Based on Spring MVC; WEB Application Performance Optimization; Database Performance Optimization; Service Monitoring and Response Strategies}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
