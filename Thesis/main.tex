@@ -10,6 +10,8 @@
 
 % 所有其它可能用到的包都统一放到这里了，可以根据自己的实际添加或者删除。
 \usepackage{thuthesis}
+\usepackage{listings}
+\usepackage{xcolor}
 
 % 定义所有的图片文件在 figures 子目录下
 \graphicspath{{figures/}}
@@ -35,6 +37,24 @@
 
 %%% 正文部分
 \mainmatter
+%% 代码样式
+\lstset{
+columns=fixed,
+numbers=left,                                        % 在左侧显示行号
+escapeinside=``,   % 设定`....`之内为逃逸部分，这部分内容将按照正常的LaTeX代码编译
+breaklines=true,    % 设定LaTeX对过长的代码行进行自动换行
+backgroundcolor=\color{lightgray!40!white},    % 设定代码区底色为浅灰色，lightgray!40!white是指lightgray、white两种颜色四六开混合得到的颜色，这两种颜色以及\color{}命令由xcolor宏包提供
+frame=none, % 设定代码区不加框
+extendedchars=false, % 解决代码跨页时，章节标题、页眉页脚的汉字无法正常显示的问题
+keywordstyle=\color{blue!70}\bfseries,    % 设定相应语言中关键字突出显示方式为蓝色、加粗，实现语法高亮
+basicstyle=\ttfamily,    % 设定代码的基本字体为等宽字体（类似于Courier）
+%commentstyle=\color{red!50!green!50!blue!50},
+numberstyle=\footnotesize\color{darkgray},           % 设定行号格式
+commentstyle=\ttfamily\color{green!40!black},    % 设定注释部分字体为等宽字体，用深绿色显示
+rulesepcolor=\color{red!20!green!20!blue!20},
+showstringspaces=false,    % 设定代码中字符串的空格正常显示，而不是显示为特殊字符“␣”
+stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},   % 设置字符串格式
+}
 \include{data/chap01}
 \include{data/chap02}
 \include{data/chap03}
@@ -66,7 +86,12 @@
 
 %% 附录
 \begin{appendix}
-\input{data/appendix01}
+% \input{data/appendix01}
+\input{data/append-tomcat-monitor}
+\input{data/append-tomcat-faileover}
+\input{data/append-mysql-health}
+\input{data/append-mysql-sync}
+\input{data/append-tomcat-log}
 \end{appendix}
 
 %% 致谢
