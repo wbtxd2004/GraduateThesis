@@ -22,8 +22,8 @@
 
 虽然通过本论文的优化，WEB应用的性能得到了大大的提升，但是目前的WEB应用系统依然有很大的改进空间。
 \begin{enumerate}
-\item 搭建基于Nginx的前端服务器，由于Nginx在高并发的处理和静态文件的处理速度方面以及安全性方面的性能均优于Tomcat对静态页面处理，因此搭建Nginx服务器处理用户的请求，将前端的页面请求直接提供给用户，后端的请求通过转发到Tomcat获取数据的处理结果。这样对于应用的访问速度还能进一步的提高，对于DDos攻击也能起到一定程度的防御。
-\item 对于数据库的性能而言，除了自身的引擎提高之外，还可以通过读写分离来提高数据库的响应和降低数据库的负载。通过使用MaxScale插件，实现数据库请求的读写分离。具体的流程如图~\ref{fig:maxscale}所示。
+\item 搭建基于Nginx的前端服务器，由于Nginx在高并发的处理和静态文件的处理速度方面以及安全性方面的性能均优于Tomcat对静态页面处理，因此搭建Nginx服务器处理用户的请求，将前端的页面请求直接提供给用户，后端的请求通过转发到Tomcat获取数据的处理结果。这样对于应用的访问速度还能进一步的提高，对于DDos攻击也能起到一定程度的防御\cite{reese2008nginx}。
+\item 对于数据库的性能而言，除了自身的引擎提高之外，还可以通过读写分离来提高数据库的响应和降低数据库的负载\cite{刘进京2016mysql}。通过使用MaxScale插件，实现数据库请求的读写分离。具体的流程如图~\ref{fig:maxscale}所示。
 \begin{figure}[H] % use float package if you want it here
   \centering
   \includegraphics[width=5in]{chap06/maxscale}
