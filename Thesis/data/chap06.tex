@@ -1,6 +1,7 @@
 \chapter{总结与展望}
 \label{cha:summarize}
 \section{总结}
+
 本论文通过针对基于Spring MVC框架开发的WEB应用系统进行应用、数据库、服务器三个层级的优化研究，如图~\ref{fig:summery}所示。
 \begin{figure}[H] % use float package if you want it here
   \centering
@@ -18,19 +19,27 @@
 通过三个层面的优化策略研究，目前应用服务较优化前相比，单个服务器的负载达到了比较好的程度，应用的访问速度提升了接近20\%,新版的部署时间节省了50\%。
 
 具体的数据对比在后期的论文完善过程中进行补充。
+
 \section{展望}
 
 虽然通过本论文的优化，WEB应用的性能得到了大大的提升，但是目前的WEB应用系统依然有很大的改进空间。
 \begin{enumerate}
+
 \item 搭建基于Nginx的前端服务器，由于Nginx在高并发的处理和静态文件的处理速度方面以及安全性方面的性能均优于Tomcat对静态页面处理，因此搭建Nginx服务器处理用户的请求，将前端的页面请求直接提供给用户，后端的请求通过转发到Tomcat获取数据的处理结果。这样对于应用的访问速度还能进一步的提高，对于DDos攻击也能起到一定程度的防御\cite{reese2008nginx}。
+
 \item 对于数据库的性能而言，除了自身的引擎提高之外，还可以通过读写分离来提高数据库的响应和降低数据库的负载\cite{刘进京2016mysql}。通过使用MaxScale插件，实现数据库请求的读写分离。具体的流程如图~\ref{fig:maxscale}所示。
+
 \begin{figure}[H] % use float package if you want it here
   \centering
   \includegraphics[width=5in]{chap06/maxscale}
   \caption{数据库读写分离流程}
   \label{fig:maxscale}
 \end{figure}
+
 MaxScale会根据用户的请求将读取的请求和非读取的请求转发到不同的数据库中，其中读取的请求转发到slave库中，其它请求转发到master库中，实现数据的读写分离。
+
 \item 除了通过读写分离的方式提升数据库的效率以外，在数据库稳定性方面可以通过LiquiBase软件来实现数据库重构和迁移的操作，它可以在很大程度上保证当数据库之间出现数据不一致的情况时，能够自动的实现数据的同步和迁移，避免了人工干预导致的其它问题。
+
 \item 本论文虽然用了阿里云的云监控实现了服务状态的监控，但是服务的自动failover工作却没有实现，目前还是通过人工干预来进行故障恢复。在以后的项目开发中，可以充分开发阿里云API的故障检测和自动failover系统，通过云监控的API去监控服务的状态，当出现故障时，自动调用failover程序通过故障服务的API接口进行故障的转移或者恢复，这对于提高故障的解决和WEB应用的高可用有更大的价值。
+
 \end{enumerate}

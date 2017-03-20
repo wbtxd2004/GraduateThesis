@@ -14,7 +14,7 @@
     新版本在提升数据存储的灵活性方面增加了JSON和generate column两个新功能。
 
     随着非结构化数据存储需求的持续增长，各种非结构化数据存储的数据库应运而生（如MongoDB）。从最新的数据库使用排行榜来看，MongoDB已经超过了PostgreSQL，其火热程度可见一斑。各大关系型数据库也不甘示弱，纷纷提供对JSON的支持，以应对非结构化数据库的挑战。MySQL数据库从5.7.8版本开始，也提供了对JSON的支持。使用方式如下：
-\begin{lstlisting}[language=sql,numbers=none]
+\begin{lstlisting}[numbers=none]
 CREATE TABLE t1 (jdoc JSON);
 INSERT INTO t1 VALUES('{"key1": "value1", "key2": "value2"}');
 \end{lstlisting}
@@ -143,59 +143,50 @@ MySQL的复制延迟是一直被诟病的问题之一，欣喜的是，MySQL 5.7
 
 除了以上三个方面的优化之外，还有许多优化项目可以应用于本项目的数据库优化中。考虑到阿里云磁盘的性能，可以通过innodb\_flush\_method参数将数据和日志文件不经过缓存直接写入到文件中；通过innodb\_strict\_mode参数开启严格模式，对于写法错误的SQL语句跳过警告直接提示错误，提升数据库的稳定性；通过脏页的相关配置参数调整数据库对于脏页的刷新方式和效率，提升数据的有效性。
 \end{enumerate}
-综合以上各个方面的优化之后，本论文中WEB应用的数据库InnoDB引擎优化参数为：
-\begin{lstlisting}[language=sql,numbers=none]
-# 缓冲池字节大小
-innodb_buffer_pool_size = 800M
-# 缓冲池实例数量
-innodb_buffer_pool_instances = 8
-# 启动时将热数据加载到内存
-innodb_buffer_pool_load_at_startup = 1
-# 关闭时将热数据dump到本地磁盘
-innodb_buffer_pool_dump_at_shutdown = 1
-# page cleaner线程每次刷新脏页的数量
-innodb_lru_scan_depth = 2000
-# 事务等待获取资源等待的最长时间
-innodb_lock_wait_timeout = 5
-# 调整刷新脏页的数量
-innodb_io_capacity = 4000
-# 刷新脏页的最大值
-innodb_io_capacity_max = 8000
-# 数据和日志写入磁盘的方式-直接写入磁盘
-innodb_flush_method = O_DIRECT
-# 文件格式，Barracuda支持压缩页，新格式
-innodb_file_format = Barracuda
-# 设置文件格式最高版本
-innodb_file_format_max = Barracuda
-# 刷新脏页临近页
-innodb_flush_neighbors = 1
-# 用来缓冲日志数据的缓冲区大小
-innodb_log_buffer_size = 1M
-# 单独的清除线程数量-0不适用单独线程
-innodb_purge_threads = 4
-# 为字段创建索引时，限制的字节长度，超过直接报错
-innodb_large_prefix = 1
-# 线程并发数
-innodb_thread_concurrency = 64
-# 将发生的所有死锁信息都记录到错误日志中
-innodb_print_all_deadlocks = 1
-# 严格检查模式，写法有错误直接报错，不警告
-innodb_strict_mode = 1
-# 建立索引时用于排序数据的排序缓冲区大小-10M
-innodb_sort_buffer_size = 10485760
-# 转储缓冲池中read out and dump 的最近使用的页的占比
-innodb_buffer_pool_dump_pct = 40
-# page cleaner线程数量
-innodb_page_cleaners = 4
-# 开启在线回收undo log日志文件
-innodb_undo_log_truncate = 1
-# 超过这个阈值时触发回收
-innodb_max_undo_log_size = 2G
-# 回收undo日志的频率
-innodb_purge_rseg_truncate_frequency = 128
-\end{lstlisting}
+综合以上各个方面的优化之后，本论文中WEB应用的数据库InnoDB引擎优化参数如表~\ref{tab:mysql-innodb}所示：
+\begin{longtable}[hc]{{l}{c}{l}}
+\caption{InnoDB优化参数}\label{tab:mysql-innodb}\\
+\toprule[1.5pt]
+{\heiti 参数项} & {\heiti 参数内容}  & {\heiti 参数描述} \\\midrule[1pt]
+\endfirsthead
+\multicolumn{3}{c}{续表~\thetable\hskip1em InnoDB优化参数}\\
+\toprule[1.5pt]
+{\heiti 参数项} & {\heiti 参数内容}  & {\heiti 参数描述} \\\midrule[1pt]
+\endhead
+\hline
+\multicolumn{3}{r}{续下页}
+\endfoot
+\endlastfoot
+      innodb\_buffer\_pool\_size  & 800M &  缓冲池字节大小\\
+      innodb\_buffer\_pool\_instances  & 8 &  缓冲池实例数量 \\
+      innodb\_buffer\_pool\_load\_at\_startup  & 1 & 启动时将热数据加载到内存 \\
+      innodb\_buffer\_pool\_dump\_at\_shutdown & 1 &  关闭时将热数据dump到本地磁盘\\
+      innodb\_lru\_scan\_depth & 2000 & page cleaner线程每次刷新脏页的数量\\
+      innodb\_lock\_wait\_timeout & 5 & 事务等待获取资源等待的最长时间\\
+      innodb\_io\_capacity & 4000 & 调整刷新脏页的数量\\
+      innodb\_io\_capacity\_max & 8000 & 刷新脏页的最大值\\
+      innodb\_flush\_method & O\_DIRECT & 数据和日志写入磁盘的方式-直接写入磁盘\\
+      innodb\_file\_format & Barracuda & 文件格式，Barracuda支持压缩页，新格式 \\
+      innodb\_file\_format\_max & Barracuda &  设置文件格式最高版本\\
+      innodb\_flush\_neighbors & 1 & 刷新脏页临近页  \\
+      innodb\_log\_buffer\_size & 1M & 用来缓冲日志数据的缓冲区大小   \\
+      innodb\_purge\_threads & 4 &  单独的清除线程数量  \\
+      innodb\_large\_prefix  & 1 & 为字段创建索引时限制的字节长度，超过直接报错    \\
+      innodb\_thread\_concurrency  & 64 &  线程并发数  \\
+      innodb\_print\_all\_deadlocks & 1 &  将发生的所有死锁信息都记录到错误日志中  \\
+      innodb\_strict\_mode & 1 &  严格检查模式，写法有错误直接报错，不警告  \\
+      innodb\_sort\_buffer\_size & 10485760 &  建立索引时用于排序数据的排序缓冲区大小-10M  \\
+      innodb\_buffer\_pool\_dump\_pct & 40 &  转储缓冲池中的最近使用的页的占比  \\
+      innodb\_page\_cleaners & 4 &  page cleaner线程数量  \\
+      innodb\_undo\_log\_truncate & 1 &  开启在线回收undo log日志文件  \\
+      innodb\_max\_undo\_log\_size & 2G &  超过这个阈值时触发回收 \\
+      innodb\_purge\_rseg\_truncate\_frequency & 128 &  回收undo日志的频率  \\
+\bottomrule[1.5pt]
+\end{longtable}
+
 
 \section{主从复制和延迟复制优化}
+
 除了通过InnoDB引擎的配置来保证数据的有效性和稳定性之外，在数据库的开发是使用过程中还可以通过配置主从复制和延迟复制来保证数据。在5.7以前的MySQL版本中，由于主从复制的延迟问题，通常会选择第三方工具来进行数据的同步，但是通过第三方工具，对于数据同步的问题性由带来了问题，这些问题一直是运维人员在数据库开发过程中比较头疼的问题。随着5.7版本的发布，新版本在数据库主从复制方面进行了很多改进，包括降低了复制的延迟，通过looseless半同步方式提升了复制的稳定性\cite{朱振2013基于}。
 
 MySQL数据库复制技术是把数据从一个数据库节点拷贝到其它一个或者多个数据库节点中，前者通常被称为主库(Master)，后者通常被称为从库(Slave)，如图\ref{fig:replication1}所示。
@@ -243,7 +234,7 @@ MySQL复制最常用的复制方式是通过二进制文件的方式进行复制
 图~\ref{fig:replication2}描述了复制的过程
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap04/replication2}
+  \includegraphics[width=4in]{chap04/replication2}
   \caption{MySQL复制流程}
   \label{fig:replication2}
 \end{figure}
@@ -286,12 +277,12 @@ binlog_gtid_simple_recovery = 1
 GTID是全局事务标识(global transaction identifieds)，在数据库中一个事务对应一个GTID，而且一个GTID在一个服务器上只执行一次，避免重复执行导致数据混乱或者主从不一致，通过GTID可以保证日志文件中每一次事务都对应一个唯一的标志，对于从库拉取日志和日志分析具有很重要的意义。
 \begin{enumerate}
 \item 创建用于主从复制的用户
-\begin{lstlisting}[language=sql,numbers=none]
+\begin{lstlisting}[numbers=none]
 GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%' IDENTIFIED BY 'replpassword';
 \end{lstlisting}
 其中repl为用户名，replpassword为密码
 \item 配置master信息
-\begin{lstlisting}[language=sql,numbers=none]
+\begin{lstlisting}[numbers=none]
 change master to master_host ='ip', master_port = port, master_user = 'repl', master_password = 'replpassword', master_auto_position =1;
 \end{lstlisting}
 变量master\_host值为master所在服务器的IP地址，master\_port为master服务器的数据库连接端口，配置好用户名和密码。
@@ -324,9 +315,8 @@ CHANGE MASTER TO MASTER_DELAY = 3600;
 \item 开发OSS文件上传脚本
 
 首先需要通过pip install oss2 命令在备份服务器中安装Python版本的OSS SDK，安装完成后在服务器的/mnt/sh中新建oss目录，并在oss目录下创建上传脚本dbuposs.py文件。修改文件如下：
-\begin{lstlisting}[language=python]
+\begin{lstlisting}[numbers=none]
 #!/usr/bin/python2.7
-# -*- coding: utf-8 -*-
 import oss2
 import sys
 auth = oss2.Auth('AccessKeyId', 'AccessKeySecret ')
@@ -341,52 +331,29 @@ bucket.put_object_from_file(sys.argv[1], '/mnt/mysqldump/'+sys.argv[1])
 通过bucket对象的put\_object\_from\_file函数将指定的文件上传到OSS中，完成文件上传。
 \item 开发数据库备份脚本
 
-数据库脚本可以通过Bash脚本来实现，前提是需要在服务器中安装mysql，脚本的存放位置为/mnt/sh/mysqlbak.sh。
+数据库脚本可以通过Shell脚本来实现，前提是需要在服务器中安装mysql，脚本的存放位置为/mnt/sh/mysqlbak.sh。
 
-备份的流程主要为：首先要配置被备份数据库的相关信息，包括用户名、密码、端口、IP地址、数据库名称等变量；然后配置备份数据的保存位置和命名方式，以及日志的相关配置；之后通过执行mysqldump备份数据库到本地，通过tar命令将备份的sql文件压缩；最后通过调用OSS上传脚本将压缩后的备份文件上传到OSS中。同时，本地目录中只保存七天内的数据库备份文件，超过七天的文件会被删除。
+数据库备份脚本的设计流程为：
+\begin{enumerate}
+  \item 为了保障跟数据库服务器以及数据库服务的连接，首先需要配置服务器的基本信息和数据库相关信息，主要包括数据库服务器的IP地址以及数据库的服务端口号、数据库名称以及用于认证的用户名和密码等信息。
+  \item 为了记录每次数据库备份的信息以及备份结果，需要在指定目录生成数据库备份日志文件，并且设计日志记录的内容和格式，确保每次备份都能准确的记录相关的信息，包括备份的时间、备份的结果、备份文件的路径及名称等信息。
+  \item 为了保证数据库备份文件的有效空间占用和统一管理，配置备份文件的保存路径以及文件命名格式。
+  \item 为了实现对多个数据表的分别备份，设计变量dbname数组，存放需要备份的数据表名称。
+  \item 通过循环对需要备份的数据表进行备份，备份方式为：
+  \begin{lstlisting}[numbers=none]
+  mysqldump -u${dbuser} -p${dbpasswd} -hdbip -Pdbport ${dbn} --set-gtid-purged=OFF > ${logpath}/${backtime}.sql
+  \end{lstlisting}
+  通过mysqldump命令实现数据库的备份
+  \item 为了节约磁盘空间，对备份完成后的数据库进行压缩，将sql文件压缩为bz2格式的文件，压缩比为1:12。
+  \item 为了保证备份文件长久存在，通过OSS文件上传脚本将压缩后的备份文件上传到阿里云的OSS。
+  \item 为了合理的配置本地的数据恢复以及磁盘空间，对七天以上的备份进行删除，只保留近其他的备份数据。
+\end{enumerate}
 
-备份脚本如下：
-\begin{lstlisting}[language=bash]
-#!/bin/bash
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
-export PATH
-#数据库用户名
-dbuser='root'
-#数据库用密码
-dbpasswd='password'
-#需要备份的数据库，多个数据库用空格分开
-dbname='minishop'
-#备份时间
-backtime= (date +%Y%m%d%H%M%S)
-#日志备份路径
-logpath='/mnt/mysqldump'
-#数据备份路径
-datapath='/mnt/mysqldump'
-#日志记录头部
-echo "备份时间为${backtime},备份数据库表 ${dbname} 开始" >> ${logpath}/log.log
-#正式备份数据库
-for dbn in $dbname; do
-source=(mysqldump -u${dbuser} -p${dbpasswd} -hdbip -Pdbport ${dbn} --set-gtid-purged=OFF > ${logpath}/${backtime}.sql) 2>> ${logpath}/mysqllog.log;
-#备份成功以下操作
-if [ "$?" == 0 ];then
-cd $datapath
-#为节约硬盘空间，将数据库压缩
-tar jcf ${dbn}${backtime}.tar.bz2 ${backtime}.sql > /dev/null
-#删除原始文件，只留压缩后文件
-rm -f ${datapath}/${backtime}.sql
-#上传到oss
-/mnt/sh/oss/dbuposs.py ${dbn}${backtime}.tar.bz2
-#删除七天前备份，也就是只保存7天内的备份
-find $datapath -name "*.tar.bz2" -type f -mtime +7 -exec rm -rf {} \; > /dev/null 2>&1
-echo "数据库表 ${dbname} 备份成功!!" >> ${logpath}/mysqllog.log
-else
-#备份失败则进行以下操作
-echo "数据库表 ${dbname} 备份失败!!" >> ${logpath}/mysqllog.log
-fi
-done
-\end{lstlisting}
+备份脚本参见附录~\ref{cha:MysqlBackup}：
+
 
 \item 定时任务设置
+
 为了保证每天都进行一次数据库备份操作，需要通过定时任务来保证数据库备份脚本每天执行一次。在Linux环境中，通过crontab软件来执行定时任务。crontab是一个在类Unix操作系统上的任务计划程序，它可以让用户在指定时间段周期性地运行命令或者shell脚本，通常被用在系统的自动化维护或者管理。
 
 在本项目中，cron定时任务的配置文件在/var/spool/cron中的root文件，在root文件中添加如下定时任务：
@@ -394,8 +361,9 @@ done
 #<分钟> <小时> <日> <月份> <星期> <命令>
 00 00 * * * /mnt/sh/mysqlbak.sh
 \end{lstlisting}
-设定在每天的凌晨0点0份执行数据库备份脚本。
+设定在每天的凌晨0点0分执行数据库备份脚本。
 \end{enumerate}
 %\section{数据恢复方案}
 \section{本章总结}
+
 本章是对本论文中WEB项目的数据库进行优化的一些策略，主要包括通过InnoDB配置参数调整提升数据库自身的运行性能，通过配置主从复制以及延迟复制提升数据的稳定性和有效性，通过开发数据库定时备份脚本来实现数据库的每日备份。通过这些策略，在提升MySQL运行性能同时也保证了数据的完整性和有效性，对于WEB应用的作用至关重要。

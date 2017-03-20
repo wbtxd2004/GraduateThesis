@@ -4,71 +4,72 @@
 目前大多数的WEB应用产品在设计开发的过程中对数据的读取还依旧通过直接对数据库进行增、删、改、查来实现。然而随着用户数量的增加，用户的请求也不断的增多，这对于数据库的压力是非常大的。之前的数据操作流程参见图~\ref{fig:couchbase1}。
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=1in]{chap03/couchbase1}
+  \includegraphics[width=3in]{chap03/couchbase1}
   \caption{通常数据操作流程}
   \label{fig:couchbase1}
 \end{figure}
 为了缓解数据库的压力，在数据的读取过程中将系统的基础数据读取到Couchbase缓存中，这样只需要对数据的基础数据进行一次读取即可完成数据的加载，降低了数据库的压力。通过缓存的数据操作流程参见图~\ref{fig:couchbase2}。
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=1.7in]{chap03/couchbase2}
+  \includegraphics[width=3in]{chap03/couchbase2}
   \caption{通常数据操作流程}
   \label{fig:couchbase2}
 \end{figure}
 本论文中的WEB应用的数据包含基础数据和应用数据两部分，其中基础数据主要包括系统的基本配置数据、系统的常用变量数据、用户权限数据、枚举类型等相对固定的数据，这些数据在用户访问应用的时候只需要加载一次即可，不需要重复的从数据中读取，而应用数据则主要包含应用内的用户信息、商户信息、交易数据、库存数据等等不固定的数据，这些数据随着用户的时候会不断的发生变化，而且新的数据从数据库重新读取，这些数据在用户使用时需要多次加载。针对于以上不同数据的特点，将基础数据在用户首次登陆时加载到Couchbase缓存中，以后再读取时直接从缓存中读取。
-\subsection{Couchbase安装}
-\begin{enumerate}
-\item 直接安装\cite{brown2012getting}
+% \subsection{Couchbase安装}
+% \begin{enumerate}
+% \item 直接安装\cite{brown2012getting}
 
-首先，通过浏览器访问\url{https://www.couchbase.com/nosql-databases/downloads}
-，在页面中选择4.1.0版本、支持Red Hat 7平台的Couchbase Server安装文件couchbase-server-enterprise-4.1.0-centos7.x86\_64.rpm,将rpm文件复制到服务器中。或者直接在shell中通过
-\begin{lstlisting}[language=bash,numbers=none]
-$ wget https://packages.couchbase.com/releases/4.1.0/couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm
-\end{lstlisting}
-命令将rpm安装文件下载到制定路径中。
+% 首先，通过浏览器访问\url{https://www.couchbase.com/nosql-databases/downloads}
+% ，在页面中选择4.1.0版本、支持Red Hat 7平台的Couchbase Server安装文件couchbase-server-enterprise-4.1.0-centos7.x86\_64.rpm,将rpm文件复制到服务器中。或者直接在shell中通过
+% \begin{lstlisting}[language=bash,numbers=none]
+% $ wget https://packages.couchbase.com/releases/4.1.0/couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm
+% \end{lstlisting}
+% 命令将rpm安装文件下载到制定路径中。
 
-然后，通过root用户访问Linux服务器，在终端中进入到couchbase安装文件所在路径，通过如下命令安装couchbase：
-\begin{lstlisting}[language=bash,numbers=none]
-$ rpm --install couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm
-\end{lstlisting}
-安装完成后自动启动couchbase，并且会有如下提示信息：
-\begin{lstlisting}[language=bash,numbers=none]
-Warning: Transparent hugepages looks to be active and should not be.
-Please look at http://bit.ly/1ZAcLjD as for how to PERMANENTLY alter this setting.
-Minimum RAM required  : 4 GB
-System RAM configured : 3.70 GB
+% 然后，通过root用户访问Linux服务器，在终端中进入到couchbase安装文件所在路径，通过如下命令安装couchbase：
+% \begin{lstlisting}[language=bash,numbers=none]
+% $ rpm --install couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm
+% \end{lstlisting}
+% 安装完成后自动启动couchbase，并且会有如下提示信息：
+% \begin{lstlisting}[language=bash,numbers=none]
+% Warning: Transparent hugepages looks to be active and should not be.
+% Please look at http://bit.ly/1ZAcLjD as for how to PERMANENTLY alter this setting.
+% Minimum RAM required  : 4 GB
+% System RAM configured : 3.70 GB
 
-Minimum number of processors required : 4 cores
-Number of processors on the system    : 1 cores
+% Minimum number of processors required : 4 cores
+% Number of processors on the system    : 1 cores
 
-Reloading systemd:                                         [  OK  ]
-Starting couchbase-server (via systemctl):                 [  OK  ]
+% Reloading systemd:                                         [  OK  ]
+% Starting couchbase-server (via systemctl):                 [  OK  ]
 
-You have successfully installed Couchbase Server.
-Please browse to http://iZ257vyhrvzZ:8091/ to configure your server.
-Please refer to http://couchbase.com for additional resources.
+% You have successfully installed Couchbase Server.
+% Please browse to http://iZ257vyhrvzZ:8091/ to configure your server.
+% Please refer to http://couchbase.com for additional resources.
 
-Please note that you have to update your firewall configuration to
-allow connections to the following ports: 11211, 11210, 11209, 4369,
-8091, 8092, 8093, 9100 to 9105, 9998, 18091, 18092, 11214, 11215 and
-from 21100 to 21299.
+% Please note that you have to update your firewall configuration to
+% allow connections to the following ports: 11211, 11210, 11209, 4369,
+% 8091, 8092, 8093, 9100 to 9105, 9998, 18091, 18092, 11214, 11215 and
+% from 21100 to 21299.
 
-By using this software you agree to the End User License Agreement.
-See /opt/couchbase/LICENSE.txt.
-\end{lstlisting}
-couchbase默认安装位置为“/opt/couchbase/”
+% By using this software you agree to the End User License Agreement.
+% See /opt/couchbase/LICENSE.txt.
+% \end{lstlisting}
+% couchbase默认安装位置为“/opt/couchbase/”
 
-\item Docker安装\cite{merkel2014docker}
+% \item Docker安装\cite{merkel2014docker}
 
-\begin{lstlisting}[language=bash,numbers=none]
-# 下载镜像
-$ docker pull couchbase:4.1.0
-# 运行容器
-$ docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase
-\end{lstlisting}
+% \begin{lstlisting}[language=bash,numbers=none]
+% # 下载镜像
+% $ docker pull couchbase:4.1.0
+% # 运行容器
+% $ docker run -d --name db -p 8091-8094:8091-8094 -p 11210:11210 couchbase
+% \end{lstlisting}
 
-\end{enumerate}
-Couchbase安装完成后，需要在阿里云的安全策略中配置外网访问的端口和应用访问的端口，相关配置参见\ref{cha:Monitor-aliyun}
+% \end{enumerate}
+% Couchbase安装完成后，需要在阿里云的安全策略中配置外网访问的端口和应用访问的端口。
+% 相关配置参见\ref{cha:Monitor-aliyun}
 \subsection{Couchbase集群配置}
 Couchbase服务器及可以单独运行，也可以将多个服务器组成一个集群，作为集群来运行。通过Couchbase集群，可以实现缓存数据的分布式存储及负载均衡，提升缓存的高可用以及系统的性能\cite{brown2013developing}。
 
@@ -97,7 +98,7 @@ Couchbase的集群管理是由erlang/otp进行集群通信管理，集群之间�
 在设置标签页中的集群标签页下新建和配置集群信息
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/couchbase5}
+  \includegraphics[width=5in]{chap03/couchbase5}
   \caption{Couchbase创建集群}
   \label{fig:couchbase5}
 \end{figure}
@@ -111,7 +112,7 @@ Couchbase的集群管理是由erlang/otp进行集群通信管理，集群之间�
 增加完服务器节点后可以看到集群的基本信息
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/couchbase7}
+  \includegraphics[width=5in]{chap03/couchbase7}
   \caption{Couchbase集群概览}
   \label{fig:couchbase7}
 \end{figure}
@@ -137,72 +138,86 @@ Couchbase的集群管理是由erlang/otp进行集群通信管理，集群之间�
 % \item 数据更新
 % \end{enumerate}
 \subsection{Couchbase缓存对系统性能影响}
-通过ab命令对使用应用进行压力测试，在开启couchbase和关闭couchbase的情况下分别模拟5万个请求，每次并发10个请求来对比缓存对系统性能的影响：
-\begin{lstlisting}[language=bash,numbers=none]
-$ ab -n 50000 -c 10 -k http://test.hics.hisense.com/client/mnsindex.html
+通过ab 命令对测试应用进行测试，在开启Couchbase和关闭Couchbase的情况下，分别模拟10000个需要向后台请求数据的请求(例如获取商户信息的请求getUserInfo.action)，根据测试的参数及结果来对比分析Couchbase缓存对于应用系统性能的影响,结果如表\ref{tab:couchbase-test}所示：
+% \begin{lstlisting}[language=bash,numbers=none]
+% $ ab -n 50000 -c 10 -k http://test.hics.hisense.com/client/mnsindex.html
 
-Server Software:        Apache-Coyote/1.1
-Server Hostname:        test.hics.hisense.com
-Server Port:            80
+% Server Software:        Apache-Coyote/1.1
+% Server Hostname:        test.hics.hisense.com
+% Server Port:            80
 
-Document Path:          /client/mnsindex.html
-Document Length:        36028 bytes
+% Document Path:          /client/mnsindex.html
+% Document Length:        36028 bytes
 
-Concurrency Level:      10
-Time taken for tests:   206.318 seconds
-Complete requests:      50000
-Failed requests:        0
-Keep-Alive requests:    49504
-Total transferred:      1816897520 bytes
-HTML transferred:       1801400000 bytes
-Requests per second:    242.34 [#/sec] (mean)
-Time per request:       41.264 [ms] (mean)
-Time per request:       4.126 [ms] (mean, across all concurrent requests)
-Transfer rate:          8599.92 [Kbytes/sec] received
-\end{lstlisting}
-\begin{lstlisting}[language=bash,numbers=none]
-$ ab -n 50000 -c 10 -k http://test.hics.hisense.com/client/mnsindex.html
-Server Software:        Apache-Coyote/1.1
-Server Hostname:        test.hics.hisense.com
-Server Port:            80
+% Concurrency Level:      10
+% Time taken for tests:   206.318 seconds
+% Complete requests:      50000
+% Failed requests:        0
+% Keep-Alive requests:    49504
+% Total transferred:      1816897520 bytes
+% HTML transferred:       1801400000 bytes
+% Requests per second:    242.34 [#/sec] (mean)
+% Time per request:       41.264 [ms] (mean)
+% Time per request:       4.126 [ms] (mean, across all concurrent requests)
+% Transfer rate:          8599.92 [Kbytes/sec] received
+% \end{lstlisting}
+% \begin{lstlisting}[language=bash,numbers=none]
+% $ ab -n 50000 -c 10 -k http://test.hics.hisense.com/client/mnsindex.html
+% Server Software:        Apache-Coyote/1.1
+% Server Hostname:        test.hics.hisense.com
+% Server Port:            80
 
-Document Path:          /client/mnsindex.html
-Document Length:        36028 bytes
+% Document Path:          /client/mnsindex.html
+% Document Length:        36028 bytes
 
-Concurrency Level:      10
-Time taken for tests:   247.137 seconds
-Complete requests:      50000
-Failed requests:        0
-Keep-Alive requests:    49505
-Total transferred:      1814097525 bytes
-HTML transferred:       1801400000 bytes
-Requests per second:    202.32 [#/sec] (mean)
-Time per request:       49.427 [ms] (mean)
-Time per request:       4.943 [ms] (mean, across all concurrent requests)
-Transfer rate:          7168.40 [Kbytes/sec] received
-\end{lstlisting}
-通过测试可以发现，开启Couchbase后系统的网络吞吐率在242.34reqs/s,而不使用Couchbase时吞吐量在202.32reqs/s，开启Couchbase对于系统性能的提升大约在20\%左右。
+% Concurrency Level:      10
+% Time taken for tests:   247.137 seconds
+% Complete requests:      50000
+% Failed requests:        0
+% Keep-Alive requests:    49505
+% Total transferred:      1814097525 bytes
+% HTML transferred:       1801400000 bytes
+% Requests per second:    202.32 [#/sec] (mean)
+% Time per request:       49.427 [ms] (mean)
+% Time per request:       4.943 [ms] (mean, across all concurrent requests)
+% Transfer rate:          7168.40 [Kbytes/sec] received
+% \end{lstlisting}
+\begin{table}[htb]
+  \centering
+  \begin{minipage}[t]{0.8\linewidth} % 如果想在表格中使用脚注，minipage是个不错的办法
+  \caption[APR模式]{APR模式性能对比表}
+  \label{tab:couchbase-test}
+    \begin{tabularx}{\linewidth}{lXX}
+      \toprule[1.5pt]
+      {\heiti 测试参数} & {\heiti 开启Couchbase} & {\heiti 关闭Couchbase} \\\midrule[1pt]
+      单次请求用时  &  0.670(s) & 0.113(s)\\
+      请求失败次数 &  82 & 7 \\
+      \bottomrule[1.5pt]
+    \end{tabularx}
+  \end{minipage}
+\end{table}
+通过测试可以发现，开启Couchbase后系统的单次请求用时为0.670秒,而不使用Couchbase时单次请求用时为0.113秒，效率提升在83\%左右，这表示开启缓存后进行数据请求时，只需要耗费一次长时间的请求，数据建立缓存后获取效率将大大提升。除此之外，请求的失败次数也大大降低，这对于系统的稳定性来说提升特别明显。
 \section{Tomcat高并发APR优化}
 Tomcat对用户请求的处理方式有BIO、NIO以及APR三种方式，其中BIO模式为Tomcat的默认处理方式\cite{vukotic2011securing}。
 
 BIO模式是一种阻塞式I/O操作，这种模式表示Tomcat使用的是传统Java I/O操作。在这种模式下对于每个请求都要创建一个线程来处理，线程开销较大，不能处理高并发的场景，在三种模式中性能也最低。启动tomcat看到如图~\ref{fig:tomcat1}所示日志，表示使用的是BIO模式：
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/tomcat1}
+  \includegraphics[width=4in]{chap03/tomcat1}
   \caption{BIO模式日志}
   \label{fig:tomcat1}
 \end{figure}
 NIO模式是Java SE 1.4及后续版本提供的一种新的I/O操作方式。该模式是一个基于缓冲区、并能提供非阻塞I/O操作的Java API，它拥有比传统I/O操作(bio)更好的并发运行性能。启动tomcat看到如图~\ref{fig:tomcat2}所示日志，表示使用的是NIO模式：
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/tomcat2}
+  \includegraphics[width=4in]{chap03/tomcat2}
   \caption{NIO模式日志}
   \label{fig:tomcat2}
 \end{figure}
 APR模式是从操作系统级别解决异步IO问题，大幅度的提高服务器的处理和响应性能， 也是Tomcat运行高并发应用的首选模式。启动tomcat看到如图~\ref{fig:tomcat3}所示日志，表示使用的是APR模式：
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/tomcat3}
+  \includegraphics[width=4in]{chap03/tomcat3}
   \caption{APR模式日志}
   \label{fig:tomcat3}
 \end{figure}
@@ -224,29 +239,51 @@ yum install make
 
 \item 在安装完依赖之后，需要安装APR的动态库，首先进入Tomcat目录下的bin目录中，解压其中的tomcat-native.tar.gz文件，并进入tomcat-native-1.2.10-src/native目录，通过configure命令监测安装平台，通过 make进行编译，最后通过 make install 命令完成安装，安装完成后动态库的安装路径为/usr/local/apr/lib 目录。
 \item APR动态库安装完成后，需要配置APR本地库到系统共享库搜索路径中，编辑Tomcat目录中bin目录下的catalina.sh 文件，在虚拟机启动参数配置中增加JAVA\_OPTS变量的值中添加java的library的路径，指定apr库的路径：
-\begin{lstlisting}[language=bash,numbers=none]
+\begin{lstlisting}[numbers=none]
 JAVA_OPTS="$JAVA_OPTS -Djava.library.path=/usr/local/apr/lib"
 \end{lstlisting}
-Tomcat8以下版本，需要指定运行模式，将protocol从HTTP/1.1改成org.apache.coyote.http11.Http11AprProtocol，修改Tomcat目录下conf目录中的server.xml文件:
+Tomcat8以下版本，需要指定运行模式，将protocol从HTTP/1.1改成org.apache.coyote.http11.Http11AprProtocol，修改Tomcat目录下conf目录中的server.xml文件,禁用SSL模式:
 \begin{lstlisting}[numbers=none]
 #禁用SSl
-<!--APR library loader. Documentation at /docs/apr.html -->
-  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
-#修改链接器为
-<Executor name="tomcatThreadPool" namePrefix="catalina-exec-"
-        maxThreads="200" maxIdleTime="60000" minSpareThreads="20"/>
-  <Connector executor="tomcatThreadPool"
-               port="8089" protocol="org.apache.coyote.http11.Http11AprProtocol"
-               maxHttpHeaderSize="8192" maxThreads="300" processorCache="1000" acceptCount="400"
-               minSpareThreads="50" URIEncoding='utf-8'  acceptorThreadCount="8"
-               enableLookups="false" redirectPort="8443"
-               connectionTimeout="120000" keepAliveTimeout="120000"
-               maxKeepAliveRequests="65535" disableUploadTimeout="true"
-               compression="on" compressionMinSize="2048"
-               noCompressionUserAgents="gozilla, traviata"
-               compressableMimeType="text/html,text/xml,text/javascript,text/css,text/plain,application/json,
-application/x-javascript "/>
+<Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
 \end{lstlisting}
+除此之外，还需要修改Tomcat连接器的参数，通过调整优化Tomcat连接器，可以使Tomcat对于用户的请求处理更佳适合于本地的服务器现状，对于并发的效果更好，具体的参数如表~\ref{tab:tomcat-connector}所示：
+\begin{table}[H]
+  \centering
+  \begin{minipage}[t]{0.8\linewidth} % 如果想在表格中使用脚注，minipage是个不错的办法
+  \caption[Tomcat]{Tomcat连接器调整参数}
+  \label{tab:tomcat-connector}
+    \begin{tabularx}{\linewidth}{lXX}
+      \toprule[1.5pt]
+      {\heiti 参数项} & {\heiti 参数内容} & {\heiti 参数描述}\\\midrule[1pt]
+      port  & 8089 &  访问端口\\
+      maxHttpHeaderSize  & 8192 &  http请求头信息的最大程度 \\
+      maxThreads  & 300 & 可以创建的最大线程数量 \\
+      processorCache & 1000 &  协议处理程序缓存\\
+      acceptCount & 400 & 队列请求数量\\
+      minSpareThreads & 50 & 最小备用线程数\\
+      URIEncoding & utf-8 & Tomcat容器的URL编码格式\\
+      acceptorThreadCount & 8 & 接收线程的进程数\\
+      enableLookups & false & 返回客户端真实的IP地址信息\\
+      redirectPort & 8443 & 请求转发端口 \\
+      connectionTimeout & 120000 &  连接超时时间，毫秒\\
+      keepAliveTimeout & 120000 & 长连接的超时时间，毫秒  \\
+      maxKeepAliveRequests & 65535 & 最大长连接个数   \\
+      disableUploadTimeout & true & 上传时是否使用超时机制  \\
+      compression & on & 启用压缩    \\
+      compressionMinSize  & 2048 &  当超过最小数据大小才进行压缩  \\
+      noCompressionUserAgents & gozilla, traviata &  哪些客户端发出的请求不压缩  \\
+      \bottomrule[1.5pt]
+    \end{tabularx}
+  \end{minipage}
+\end{table}
+% \begin{lstlisting}[numbers=none]
+% #禁用SSl
+% <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
+% #修改链接器为
+% <Executor name="tomcatThreadPool" namePrefix="catalina-exec-" maxThreads="200" maxIdleTime="60000" minSpareThreads="20"/>
+% <Connector executor="tomcatThreadPool" port="8089" protocol="org.apache.coyote.http11.Http11AprProtocol" maxHttpHeaderSize="8192" maxThreads="300" processorCache="1000" acceptCount="400" minSpareThreads="50" URIEncoding='utf-8'  acceptorThreadCount="8" enableLookups="false" redirectPort="8443" connectionTimeout="120000" keepAliveTimeout="120000" maxKeepAliveRequests="65535" disableUploadTimeout="true" compression="on" compressionMinSize="2048" noCompressionUserAgents="gozilla, traviata" compressableMimeType="text/html,text/xml,text/javascript,text/css,text/plain,application/json, application/x-javascript "/>
+% \end{lstlisting}
 \item 配置完成后，重启Tomcat，在日志文件中包含图~\ref{fig:tomcat3}中的日志信息表示APR模式开启成功。
 \end{enumerate}
 
@@ -259,7 +296,7 @@ application/x-javascript "/>
   \label{tab:tomcat-apr}
     \begin{tabularx}{\linewidth}{lXXX}
       \toprule[1.5pt]
-      {\heiti 请求此时} & {\heiti 并发数量} & {\heiti APR吞吐量} & {\heiti BIO吞吐量}\\\midrule[1pt]
+      {\heiti 请求次数} & {\heiti 并发数量} & {\heiti APR吞吐量} & {\heiti BIO吞吐量}\\\midrule[1pt]
       10000  &  10 & 6612.60 & 8255.48\\
       10000  &  1000 & 6966.93 & 6155.21\\
       50000  &  10 & 7480.96 & 8841.41\\
@@ -273,6 +310,7 @@ application/x-javascript "/>
 根据统计结果可以发现，在低并发的情况下，APR模式同默认模式BIO模式相比，APR模式吞吐量较低，但相差不大；然而在高并发的情况下，随着请求次数的增加，APR模式的优势逐渐明显显现出来，在50000次请求，每次并发1000个请求的情况下，APR模式远高于BIO模式，在100000次请求，每次并发1000个请求的情况下，BIO模式无法完成测试，通过数据可以看出，开启APR模式对于WEB平台应对高并发请求有着非常重要的作用。
 
 \section{Docker分布式优化}
+
 随着用户数量的增加以及应用业务的扩展，目前WEB应用的数据库服务器已经由一台服务器扩展为两台服务器，应用服务器也已经由一台服务器扩展为两台服务器，加上目前的测试服务器，一共有5台服务器服务于一个WEB应用，而且在未来的发展过程中，无论是数据节点还是应用节点，数量肯定时不断增加的。在节点不断增加的情况下，如何快速部署一个数据库节点或者一个应用节点必然是运维人员在新增节点时必须要面对的问题\cite{fink2014docker}。
 
 在新增节点上部署服务的方式主要有直接安装以及容器技术两种方式，其中直接安装的方式依靠手动的在服务器中安装各种库以及依赖，然后安装应用软件病进行配置，这种方式在快速部署一个节点的过程中的劣势非常明显。
@@ -337,6 +375,7 @@ Docker 使用的分层存储以及镜像的技术，使得应用重复部分的�
 \end{itemize}
 
 \subsection{使用Docker Compose管理Docker容器}
+
 在Docker安装完成后，可以通过docker pull 命令下载相应的镜像，通过ducker run运行镜像，生成一个运行中的容器。除了通过ducker run命令运行容器以外，还可以通过Docker Compose工具来快速在集群中部署分布式应用以及容器的管理工作。
 
 使用Docker Compose 项目是 Docker 官方的开源项目，负责实现对 Docker 容器集群的快速编排。它的定位是 “定义和运行多个 Docker 容器的应用（Defining and running multi-container Docker applications），它允许用户通过一个单独的 docker-compose.yml 模板文件（YAML 格式）来定义一组相关联的应用容器为一个项目（project）。
@@ -380,12 +419,14 @@ services:
             MYSQL_ROOT_PASSWORD: "*********"
 \end{lstlisting}
 上述配置文件通过运行docker.io/mysql镜像生成两个mysql容器，其中一个的端口为3306，另一个的端口为3307，这样能够很方面的创建两个容器。同样，根据这个方法也可以创建多个相互关联的容器，比如Tomcat和Mysql的相互关联。
+
 \subsection{应用容器化现状}
 根据现阶段的项目开发和服务器运维需求，已经在生产环境的两个数据库服务器中通过Docker实现了Mysql数据库容器的运行，在生产环境的两个应用服务器中实现了Couchbase应用的容器化，在测试环境的服务器中实现了测试环境数据库、测试环境Couchbase、生产环境服务器Couchbase节点、生产环境延时备份数据库的容器化。这样，当部署一个新的服务器节点的时候，可以通过Docker容器快速部署数据库应用、Couchbase应用。
 
 目前考虑到Tomcat在运行过程中需要面临频繁修改的配置文件、库文件以及其他工具的配置等问题，Docker Hub中官方的Tomcat镜像无法满足项目开发的实际需求，暂时没有实现Tomat的容器化。为了后期Tomcat的容器化，目前也正在预研通过Dockerfile定制镜像的方式定制符合项目需求的Tomcat镜像，预研工作完成后即进行Tomcat的容器话需求。
 
 由于Docker Hub的官方镜像服务器在国外，在本地服务器中通过docker pull 命令下载镜像的速度太慢，难以满足快速部署的需求，故在生产环境的一个服务器节点中部署了本地的Docker 镜像源，后期在新节点可以通过docker pull本地的镜像源来下载官方的以及定制的docker镜像。
+
 \section{SLB负载均衡优化}
 
 随着用户访问的增加以及服务高可用的需求，单个应用节点无法满足项目的需求，因此需要通过增加应用服务器节点来实现WEB应用的高可用，并且通过负载均衡将用户的请求转发到不同的服务器，降低单个服务器节点的压力。
