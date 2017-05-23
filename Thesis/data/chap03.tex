@@ -1,21 +1,21 @@
 \chapter{应用性能优化}
 \label{cha:ApplicationOptimization}
 \section{Couchbase缓存优化}
-目前大多数的WEB应用产品在设计开发的过程中对数据的读取还依旧通过直接对数据库进行增、删、改、查来实现。然而随着用户数量的增加，用户的请求也不断的增多，这对于数据库的压力是非常大的。之前的数据操作流程参见图~\ref{fig:couchbase1}。
+目前大多数的WEB应用产品在设计开发的过程中对数据的读取还依旧通过直接对数据库进行增、删、改、查来实现。然而随着用户数量的增加，用户的请求也不断的增多，这对于数据库的压力是与日俱增的。之前的数据操作流程参见图~\ref{fig:couchbase1}。
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/couchbase1}
+  \includegraphics[width=1in]{chap03/couchbase1}
   \caption{通常数据操作流程}
   \label{fig:couchbase1}
 \end{figure}
 为了缓解数据库的压力，在数据的读取过程中将系统的基础数据读取到Couchbase缓存中，这样只需要对数据的基础数据进行一次读取即可完成数据的加载，降低了数据库的压力。通过缓存的数据操作流程参见图~\ref{fig:couchbase2}。
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/couchbase2}
+  \includegraphics[width=2in]{chap03/couchbase2}
   \caption{通常数据操作流程}
   \label{fig:couchbase2}
 \end{figure}
-本论文中的WEB应用的数据包含基础数据和应用数据两部分，其中基础数据主要包括系统的基本配置数据、系统的常用变量数据、用户权限数据、枚举类型等相对固定的数据，这些数据在用户访问应用的时候只需要加载一次即可，不需要重复的从数据中读取，而应用数据则主要包含应用内的用户信息、商户信息、交易数据、库存数据等等不固定的数据，这些数据随着用户的时候会不断的发生变化，而且新的数据从数据库重新读取，这些数据在用户使用时需要多次加载。针对于以上不同数据的特点，将基础数据在用户首次登陆时加载到Couchbase缓存中，以后再读取时直接从缓存中读取。
+本论文中的WEB应用的数据包含基础数据和应用数据两部分，其中基础数据主要包括系统的基本配置数据、系统的常用变量数据、用户权限数据、枚举类型等相对固定的数据，这些数据在用户访问应用的时候只需要加载一次即可，不需要重复的从数据中读取，而应用数据则主要包含应用内的用户信息、商户信息、交易数据、库存数据等等不固定的数据，这些数据随着用户的使用会不断的发生变化，而且新的数据从数据库重新读取，这些数据在用户使用时需要多次加载。针对于以上不同数据的特点，将基础数据在用户首次登陆时加载到Couchbase缓存中，以后再读取时直接从缓存中读取。
 % \subsection{Couchbase安装}
 % \begin{enumerate}
 % \item 直接安装\cite{brown2012getting}
@@ -71,12 +71,12 @@
 % Couchbase安装完成后，需要在阿里云的安全策略中配置外网访问的端口和应用访问的端口。
 % 相关配置参见\ref{cha:Monitor-aliyun}
 \subsection{Couchbase集群配置}
-Couchbase服务器及可以单独运行，也可以将多个服务器组成一个集群，作为集群来运行。通过Couchbase集群，可以实现缓存数据的分布式存储及负载均衡，提升缓存的高可用以及系统的性能\cite{brown2013developing}。
+Couchbase服务器既可以单独运行，也可以将多个服务器组成一个集群，作为集群来运行。通过Couchbase集群，可以实现缓存数据的分布式存储及负载均衡，提升缓存的高可用以及系统的性能\cite{brown2013developing}。
 
-Couchbase数据分布是按计算分配到多个节点上，每个节点都储存两部分数据有效数据和副本数据，客户端对数据的操作主要是按照节点中对应的有效数据进行操作，执行压力会部分到不同的节点，如~\ref{fig:couchbase3}所示：
+Couchbase数据分布是按计算分配到多个节点上，每个节点都储存两部分数据：有效数据和副本数据，客户端对数据的操作主要是按照节点中对应的有效数据进行操作，执行压力会分布到不同的节点，如~\ref{fig:couchbase3}所示：
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/couchbase3}
+  \includegraphics[width=4in]{chap03/couchbase3}
   \caption{Couchbase集群数据操作模型}
   \label{fig:couchbase3}
 \end{figure}
@@ -88,7 +88,7 @@ Couchbase的集群管理是由erlang/otp进行集群通信管理，集群之间�
 \item 扩展时，以最小化数据迁移量进行复制。
 \end{enumerate}
 
-在Couchbase负载均衡中，我们所操作的每一个bucket会逻辑划分为1024个vbucket，其数据的储存基于每个vbucket储存并且每个 vbucket都会映射到相对应的服务器节点，这种储存结构的方式叫做集群映射。如~\ref{fig:couchbase4}所示，当应用与Couchbase服务器交互时，会通过SDK的与 服务器数据进行交互，当应用操作某一个的bucket的key值时，在SDK中会通过哈希的方式计算，使用公式crc32(key)%1024确定key 值是属于1024个vbucket中的某个，然后根据vbucket所映射的节点服务器对数据进行操作。
+在Couchbase负载均衡中，我们所操作的每一个bucket会逻辑划分为1024个vbucket，其数据的储存基于每个vbucket储存并且每个 vbucket都会映射到相对应的服务器节点，这种储存结构的方式叫做集群映射。如~\ref{fig:couchbase4}所示，当应用与Couchbase服务器交互时，会通过SDK的接口与 服务器数据进行交互，当应用操作某一个的bucket的key值时，在SDK中会通过哈希的方式计算，使用公式crc32(key)\%1024确定key 值是属于1024个vbucket中的某个，然后根据vbucket所映射的节点服务器对数据进行操作。
 \begin{figure}[H] % use float package if you want it here
   \centering
   \includegraphics[width=3in]{chap03/couchbase4}
@@ -189,14 +189,14 @@ Couchbase的集群管理是由erlang/otp进行集群通信管理，集群之间�
   \label{tab:couchbase-test}
     \begin{tabularx}{\linewidth}{lXX}
       \toprule[1.5pt]
-      {\heiti 测试参数} & {\heiti 开启Couchbase} & {\heiti 关闭Couchbase} \\\midrule[1pt]
+      {\heiti 测试参数} & {\heiti 关闭Couchbase} & {\heiti 开启Couchbase} \\\midrule[1pt]
       单次请求用时  &  0.670(s) & 0.113(s)\\
       请求失败次数 &  82 & 7 \\
       \bottomrule[1.5pt]
     \end{tabularx}
   \end{minipage}
 \end{table}
-通过测试可以发现，开启Couchbase后系统的单次请求用时为0.670秒,而不使用Couchbase时单次请求用时为0.113秒，效率提升在83\%左右，这表示开启缓存后进行数据请求时，只需要耗费一次长时间的请求，数据建立缓存后获取效率将大大提升。除此之外，请求的失败次数也大大降低，这对于系统的稳定性来说提升特别明显。
+通过测试可以发现，开启Couchbase后系统的单次请求用时为0.113秒,而不使用Couchbase时单次请求用时为0.67秒，效率提升在83\%左右，这表示开启缓存后进行数据请求时，只需要耗费一次长时间的请求，数据建立缓存后获取效率将大大提升。除此之外，请求的失败次数也大大降低，这对于系统的稳定性来说提升特别明显。
 \section{Tomcat高并发APR优化}
 Tomcat对用户请求的处理方式有BIO、NIO以及APR三种方式，其中BIO模式为Tomcat的默认处理方式\cite{vukotic2011securing}。
 
@@ -207,25 +207,25 @@ BIO模式是一种阻塞式I/O操作，这种模式表示Tomcat使用的是传�
   \caption{BIO模式日志}
   \label{fig:tomcat1}
 \end{figure}
-NIO模式是Java SE 1.4及后续版本提供的一种新的I/O操作方式。该模式是一个基于缓冲区、并能提供非阻塞I/O操作的Java API，它拥有比传统I/O操作(bio)更好的并发运行性能。启动tomcat看到如图~\ref{fig:tomcat2}所示日志，表示使用的是NIO模式：
+NIO模式是Java SE 1.4及后续版本提供的一种新的I/O操作方式。该模式是一个基于缓冲区、并能提供非阻塞I/O操作的Java API，它拥有比传统I/O操作(BIO)更好的并发运行性能。启动tomcat看到如图~\ref{fig:tomcat2}所示日志，表示使用的是NIO模式：
 \begin{figure}[H] % use float package if you want it here
   \centering
   \includegraphics[width=4in]{chap03/tomcat2}
   \caption{NIO模式日志}
   \label{fig:tomcat2}
 \end{figure}
-APR模式是从操作系统级别解决异步IO问题，大幅度的提高服务器的处理和响应性能， 也是Tomcat运行高并发应用的首选模式。启动tomcat看到如图~\ref{fig:tomcat3}所示日志，表示使用的是APR模式：
+APR模式是从操作系统级别解决异步IO问题，大幅度的提高服务器的处理和响应性能， 也是Tomcat运行高并发应用的首选模式。启动Tomcat看到如图~\ref{fig:tomcat3}所示日志，表示使用的是APR模式：
 \begin{figure}[H] % use float package if you want it here
   \centering
   \includegraphics[width=4in]{chap03/tomcat3}
   \caption{APR模式日志}
   \label{fig:tomcat3}
 \end{figure}
-考虑到应用在大量用户访问的情况下必然会出现高并发的现象，因此调整Tomcat的请求处理方式为APR模式对于提升系统的高并发处理能力时非常必要的\cite{蒋文旭2012大型高并发}。
+考虑到应用在大量用户访问的情况下必然会出现高并发的现象，因此调整Tomcat的请求处理方式为APR模式对于提升系统的高并发处理能力是非常必要的\cite{蒋文旭2012大型高并发}。
 
 APR(Apache Portable Runtime) 是一个基于Apache协议的高可移植库。它可以实现本地的进程管理，例如内存配置和接口；可以访问系统的IO例如使用OpenSSL；而且可以访问系统的一些命令和功能，例如获取系统的运行状态等。以上的一些功能可以将Tomcat打造成一个更加通用的WEB应用服务器，通过与本地环境的高度集成，发挥网络应用的高性能\cite{Tomcat性能调优}。
 
-在不配置APR模式的WEB应用中，300个以上的并发访问会让服务器的系统进行很快用满，后期的请求会出现无限等待和丢包的情况，当配置APR模式后，会发现服务器的压力大大降低\cite{vukotic2011embedding}，几乎在短时间内就可以完成请求，因此在生产环境中，使用APR模式对于系统性能的提升尤为重要。
+在不配置APR模式的WEB应用中，300个以上的并发访问会让服务器的系统进程很快用满，后期的请求会出现无限等待和丢包的情况，当配置APR模式后，会发现服务器的压力大大降低\cite{vukotic2011embedding}，几乎在短时间内就可以完成请求，因此在生产环境中，使用APR模式对于系统性能的提升尤为重要。
 \subsection{开启APR模式}
 \begin{enumerate}
 \item 安装依赖库,因为APR模式是使用JNI技术调用操作系统IO接口，需要用到相关API的头文件，所以需要安装必须的依赖库：
@@ -247,7 +247,7 @@ Tomcat8以下版本，需要指定运行模式，将protocol从HTTP/1.1改成org
 #禁用SSl
 <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
 \end{lstlisting}
-除此之外，还需要修改Tomcat连接器的参数，通过调整优化Tomcat连接器，可以使Tomcat对于用户的请求处理更佳适合于本地的服务器现状，对于并发的效果更好，具体的参数如表~\ref{tab:tomcat-connector}所示：
+除此之外，还需要修改Tomcat连接器的参数，通过调整优化Tomcat连接器，可以使Tomcat对于用户的请求处理更适合于本地的服务器现状，对于并发的效果更好，具体的参数如表~\ref{tab:tomcat-connector}所示：
 \begin{table}[H]
   \centering
   \begin{minipage}[t]{0.8\linewidth} % 如果想在表格中使用脚注，minipage是个不错的办法
@@ -311,25 +311,25 @@ Tomcat8以下版本，需要指定运行模式，将protocol从HTTP/1.1改成org
 
 \section{Docker分布式优化}
 
-随着用户数量的增加以及应用业务的扩展，目前WEB应用的数据库服务器已经由一台服务器扩展为两台服务器，应用服务器也已经由一台服务器扩展为两台服务器，加上目前的测试服务器，一共有5台服务器服务于一个WEB应用，而且在未来的发展过程中，无论是数据节点还是应用节点，数量肯定时不断增加的。在节点不断增加的情况下，如何快速部署一个数据库节点或者一个应用节点必然是运维人员在新增节点时必须要面对的问题\cite{fink2014docker}。
+随着用户数量的增加以及应用业务的扩展，目前WEB应用的数据库服务器已经由一台服务器扩展为两台服务器，应用服务器也已经由一台服务器扩展为两台服务器，加上目前的测试服务器，一共有5台服务器服务于一个WEB应用，而且在未来的发展过程中，无论是数据节点还是应用节点，数量肯定是不断增加的。在节点不断增加的情况下，如何快速部署一个数据库节点或者一个应用节点必然是运维人员在新增节点时必须要面对的问题\cite{fink2014docker}。
 
-在新增节点上部署服务的方式主要有直接安装以及容器技术两种方式，其中直接安装的方式依靠手动的在服务器中安装各种库以及依赖，然后安装应用软件病进行配置，这种方式在快速部署一个节点的过程中的劣势非常明显。
+在新增节点上部署服务的方式主要有直接安装以及容器技术两种方式，其中直接安装的方式依靠手动的在服务器中安装各种库以及依赖，然后安装应用软件并进行配置，这种方式在快速部署一个节点的过程中的劣势非常明显。
 
-目前实现快速部署新增节点的解决方案主要有虚拟机技术和容器技术两种技术，其中传统虚拟机技术是虚拟出一套硬件后，在其上运行一个完整操作系统，在该系统上再运行所需应用进程，如图~\ref{fig:docker1}所示；而容器内的应用进程直接运行于宿主的内核，容器内没有自己的内核，而且也没有进行硬件虚拟。因此容器要比传统虚拟机更为轻便如图~\ref{fig:docker2}所示\cite{刘熙2016基于}。
+目前实现快速部署新增节点的解决方案主要有虚拟机技术和容器技术两种技术，其中传统虚拟机技术是虚拟出一套硬件后，在其上运行一个完整操作系统，在该系统上再运行所需应用进程，如图~\ref{fig:docker1}所示；而容器内的应用进程直接运行于宿主的内核，容器内没有自己的内核，而且也没有进行硬件虚拟。因此容器要比传统虚拟机更为轻便，如图~\ref{fig:docker2}所示\cite{刘熙2016基于}。
 
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/docker1}
+  \includegraphics[height=7cm]{chap03/docker1}
   \caption{传统虚拟机模型}
   \label{fig:docker1}
 \end{figure}
 \begin{figure}[H] % use float package if you want it here
   \centering
-  \includegraphics[width=3in]{chap03/docker2}
+  \includegraphics[height=7cm]{chap03/docker2}
   \caption{Docker容器模型}
   \label{fig:docker2}
 \end{figure}
-同传统的虚拟机技术相比，Docker容积技术具有非常多的优势，这也是本论文中使用Docker技术作为WEB应用开发过程中服务器扩展的主要技术\cite{chamberlain2014using}。
+同传统的虚拟机技术相比，Docker容积技术具有非常多的优势，这也是本论文中使用Docker技术作为WEB应用开发过程中服务器扩展的主要原因\cite{chamberlain2014using}。
 \begin{itemize}
 \item 更高效的利用系统资源
 
@@ -342,11 +342,11 @@ Tomcat8以下版本，需要指定运行模式，将protocol从HTTP/1.1改成org
 开发过程中一个常见的问题是环境一致性问题。由于开发环境、测试环境、生产环境不一致，导致有些 bug 并未在开发过程中被发现。而 Docker 的镜像提供了除内核外完整的运行时环境，确保了应用运行环境一致性，从而不会再出现 “这段代码在我机器上没问题啊” 这类问题。
 \item 持续交付和部署
 
-对应用的开发和运维(DevOps)人员来说，可以将第一次的服务器创建和配置工作保存下来，并且可以扩展到其他任何地方同样可以运行并提供服务是最好的方案。
+对应用的开发和运维(DevOps)人员来说，可以将第一次的服务器创建和配置工作保存下来，并且可以扩展到其他任何地方运行并提供服务是最好的方案。
 
-使用 Docker 可以通过定制应用镜像来实现持续集成、持续交付、部署。开发人员可以通过 Dockerfile 来进行镜像构建，并结合 持续集成(Continuous Integration) 系统进行集成测试，而运维人员则可以直接在生产环境中快速部署该镜像，甚至结合 持续部署(Continuous Delivery/Deployment) 系统进行自动部署。
+使用 Docker 可以通过定制应用镜像来实现持续集成、持续交付和部署。开发人员可以通过 Dockerfile 来进行镜像构建，并结合 持续集成(Continuous Integration) 系统进行集成测试，而运维人员则可以直接在生产环境中快速部署该镜像，甚至结合 持续部署(Continuous Delivery/Deployment) 系统进行自动部署。
 
-而且使用 Dockerfile 使镜像构建透明化，不仅仅开发团队可以理解应用运行环境，也方便运维团队理解应用运行所需条件，帮助更好的生产环境中部署该镜像。
+而且使用 Dockerfile 使镜像构建透明化，不仅仅开发团队可以理解应用运行环境，也方便运维团队理解应用运行所需条件，帮助他们更好的在生产环境中部署该镜像。
 \item 更轻松的迁移
 
 由于 Docker 确保了执行环境的一致性，使得应用的迁移更加容易。Docker除了可以在我们的物理服务器中运行外，还可以在云资源服务器以及虚拟机中运行，甚至是笔记本,其运行结果是一致的。因此用户可以很轻易的将在一个平台上运行的应用，迁移到另一个平台上，而不用担心运行环境的变化导致应用无法正常运行的情况。
@@ -418,12 +418,12 @@ services:
         environment:
             MYSQL_ROOT_PASSWORD: "*********"
 \end{lstlisting}
-上述配置文件通过运行docker.io/mysql镜像生成两个mysql容器，其中一个的端口为3306，另一个的端口为3307，这样能够很方面的创建两个容器。同样，根据这个方法也可以创建多个相互关联的容器，比如Tomcat和Mysql的相互关联。
+上述配置文件通过运行docker.io/mysql镜像生成两个mysql容器，其中一个的端口为3306，另一个的端口为3307，这样能够很方便的创建两个容器。同样，根据这个方法也可以创建多个相互关联的容器，比如Tomcat和Mysql的相互关联。
 
 \subsection{应用容器化现状}
 根据现阶段的项目开发和服务器运维需求，已经在生产环境的两个数据库服务器中通过Docker实现了Mysql数据库容器的运行，在生产环境的两个应用服务器中实现了Couchbase应用的容器化，在测试环境的服务器中实现了测试环境数据库、测试环境Couchbase、生产环境服务器Couchbase节点、生产环境延时备份数据库的容器化。这样，当部署一个新的服务器节点的时候，可以通过Docker容器快速部署数据库应用、Couchbase应用。
 
-目前考虑到Tomcat在运行过程中需要面临频繁修改的配置文件、库文件以及其他工具的配置等问题，Docker Hub中官方的Tomcat镜像无法满足项目开发的实际需求，暂时没有实现Tomat的容器化。为了后期Tomcat的容器化，目前也正在预研通过Dockerfile定制镜像的方式定制符合项目需求的Tomcat镜像，预研工作完成后即进行Tomcat的容器话需求。
+目前考虑到Tomcat在运行过程中需要面临频繁修改的配置文件、库文件以及其他工具的配置等问题，Docker Hub中官方的Tomcat镜像无法满足项目开发的实际需求，暂时没有实现Tomat的容器化。为了后期Tomcat的容器化，目前也正在预研通过Dockerfile定制镜像的方式定制符合项目需求的Tomcat镜像，预研工作完成后即进行Tomcat的容器化开发。
 
 由于Docker Hub的官方镜像服务器在国外，在本地服务器中通过docker pull 命令下载镜像的速度太慢，难以满足快速部署的需求，故在生产环境的一个服务器节点中部署了本地的Docker 镜像源，后期在新节点可以通过docker pull本地的镜像源来下载官方的以及定制的docker镜像。
 
@@ -433,7 +433,7 @@ services:
 
 服务负载均衡(Server Load Balancing)是在计算机网络的发展过程中新生的一项技术，该技术通过在多个服务器节点或其它互联网资源中动态的分配负载，将应用的压力转发到各个服务器节点中，实现对于资源的使用和网络吞吐率的最佳分配，同时也在一定程度上解决了服务器过载的问题\cite{负载均衡计算机}。
 
-负载均衡主要应用在用户访问量比较大的Web网站、流量很高的文件访问和下载应用以及DNS服务中。随着负载均衡的突出表现，现在的一些数据库服务也可以实现负载均衡了，实现了数据的稳定性和高可用性。负载均衡本身是一个软件或服务，它负责监听访问服务器的外部地址和端口，将访问该端口的请求转发到后台的内网服务器节点，服务器将收到的请求进行处理后将结果或响应返回到负载均衡服务，负载均衡将收到的信息返回给用户\cite{wei2010system}。通过这种方式，增强了应用的安全性，具体流程如图\ref{fig:slb}所示。
+负载均衡主要应用在用户访问量比较大的Web网站、流量很高的文件访问和下载应用以及DNS服务中。随着负载均衡的突出表现，现在的一些数据库服务也可以实现负载均衡了，保证了数据的稳定性和高可用性。负载均衡本身是一个软件或服务，它负责监听访问服务器的外部地址和端口，将访问该端口的请求转发到后台的内网服务器节点，服务器将收到的请求进行处理后将结果或响应返回到负载均衡服务，负载均衡将收到的信息返回给用户\cite{wei2010system}。通过这种方式，增强了应用的安全性，具体流程如图\ref{fig:slb}所示。
 
 \begin{figure}[H] % use float package if you want it here
   \centering
@@ -444,7 +444,7 @@ services:
 
 负载均衡的主要特点有：
 \begin{enumerate}
-\item 通过负载均衡可以动态的增加或者减少提供服务的服务器的数量，可以更佳灵活的为应用提供扩展支持;
+\item 通过负载均衡可以动态的增加或者减少提供服务的服务器数量，可以更加灵活的为应用提供扩展支持;
 \item 通过多服务器同时提供服务，在高并发的情况下将用户请求分发到各个服务器节点中，增加了应用应对并发的能力，提高了处理的性能;
 \item 通过负载均衡可以对用户的请求进行一定程度的过滤，对于恶意的访问和攻击可以通过黑名单等方式进行处理，增加了应用的安全性;
 \item 在多节点情况下，当一个服务器节点损坏后依旧可以保证服务的正常运行，实现了应用的高可用性;
@@ -453,4 +453,4 @@ services:
 考虑到本项目中的所有服务器节点均为阿里云云服务器，故选择通过使用阿里云的负载均衡服务器服务(SLB)来进行应用的负载均衡，通过创建一个负载均衡服务，即可获取到一个公网的IP，通过配置监听，将WEB应用的http协议端口(80)和https(443)协议分别转发到生产环境各应用服务器节点的Tomcat对应端口，通过配置服务器节点的权重来决定负载均衡在转发用户请求时向后端服务器转发的比重。
 
 \section{本章总结}
-本章主要是对WEB应用的应用性能进行优化，主要包括通过配置Couchbase缓存机制，将应用的基础数据加载到缓存中，在提升应用的相应速度的同时降低了数据库的压力；通过调整Tomcat的请求处理方式为APR模式，提升Tomcat对于高并发的处理能力；通过Docker容器编排技术将应用通过容器的方式运行在服务器中，实现了节点快速部署应用的能力；通过配置应用负载均衡，在提升服务的高可用性的同时降低了服务器节点的压力。
+本章主要是对WEB应用的应用性能进行优化，主要包括通过配置Couchbase缓存机制，将应用的基础数据加载到缓存中，在提升应用的响应速度的同时降低了数据库的压力；通过调整Tomcat的请求处理方式为APR模式，提升Tomcat对于高并发的处理能力；通过Docker容器编排技术将应用通过容器的方式运行在服务器中，实现了节点快速部署应用的能力；通过配置应用负载均衡，在提升服务的高可用性的同时降低了服务器节点的压力。
