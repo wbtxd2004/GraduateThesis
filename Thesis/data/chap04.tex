@@ -144,7 +144,8 @@ MySQL的复制延迟是一直被诟病的问题之一，欣喜的是，MySQL 5.7
 除了以上三个方面的优化之外，还有许多优化项目可以应用于本项目的数据库优化中。考虑到阿里云磁盘的性能，可以通过innodb\_flush\_method参数将数据和日志文件不经过缓存直接写入到文件中；通过innodb\_strict\_mode参数开启严格模式，对于写法错误的SQL语句跳过警告直接提示错误，提升数据库的稳定性；通过脏页的相关配置参数调整数据库对于脏页的刷新方式和效率，提升数据的有效性。
 \end{enumerate}
 综合以上各个方面的优化之后，本论文中WEB应用的数据库InnoDB引擎优化参数如表~\ref{tab:mysql-innodb}所示：
-\begin{longtable}[hc]{{l}{c}{l}}
+% \begin{longtable}[hc]{{l}{c}{l}}
+\begin{longtable}[c]{c*{2}{cp{6cm}}}
 \caption{InnoDB优化参数}\label{tab:mysql-innodb}\\
 \toprule[1.5pt]
 {\heiti 参数项} & {\heiti 参数内容}  & {\heiti 参数描述} \\\midrule[1pt]
